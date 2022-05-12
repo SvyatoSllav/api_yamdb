@@ -1,24 +1,82 @@
+from django.db.models import Avg
 from django.conf import settings
+
 from django.contrib.auth import get_user_model
-from django.contrib.auth.tokens import default_token_generator
+
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
+
+from django_filters.rest_framework import DjangoFilterBackend
+from django.contrib.auth.tokens import default_token_generator
+from django.core.exceptions import ObjectDoesNotExist
+
+from rest_framework import viewsets, filters
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet
-from rest_framework.filters import SearchFilter
-from rest_framework.pagination import PageNumberPagination
-from django.core.exceptions import ObjectDoesNotExist
-
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import SignUpSerializer, UserSerializer, SafeUserSerializer
+from reviews.models import Category, Genre, Title
+from .serializers import (
+    CategorySerializer,
+    GenreSerializer,
+    TitleCreateSerializer,
+    TitleListSerializer,
+    SignUpSerializer,
+    UserSerializer,
+    SafeUserSerializer
+)
+from .mixins import CreateListDestroyModelViewSet
+from .permissions import IsAdminOrReadOnly
+from .filters import TitleFilter
 
 from users.permissions import UserPermissions
 
 
 User = get_user_model()
+
+
+class CategoryViewSet(CreateListDestroyModelViewSet):
+    """Получаем список категорий."""
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [
+        IsAuthenticatedOrReadOnly,
+        IsAdminOrReadOnly,
+    ]
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+
+
+class GenreViewSet(CreateListDestroyModelViewSet):
+    """Получаем список жанров."""
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    permission_classes = [
+        IsAuthenticatedOrReadOnly,
+        IsAdminOrReadOnly
+    ]
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    """Получаем список произведений"""
+    queryset = Title.objects.annotate(
+        rating=Avg('reviews__score')
+    ).all().order_by('name')
+    serializer_class = TitleCreateSerializer
+    permission_classes = [IsAdminOrReadOnly]
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
+    pagination_class = PageNumberPagination
+
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrieve']:
+            return TitleListSerializer
+        return TitleCreateSerializer
 
 
 class SignUp(APIView):
@@ -64,10 +122,10 @@ class ObtainToken(APIView):
             return Response('User does not exists')
 
 
-class AdminUserViewSet(ModelViewSet):
+class AdminUserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    filter_backends = (SearchFilter, )
+    filter_backends = (filters.SearchFilter, )
     search_fields = ('username', )
     permission_classes = (UserPermissions, )
     lookup_field = 'username'
@@ -108,4 +166,3 @@ class AdminUserViewSet(ModelViewSet):
         if kwargs['username'] != 'me':
             return super().destroy(request, *args, **kwargs)
         return Response('Method not allowed', status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
