@@ -1,7 +1,14 @@
 import datetime as dt
+
+from django.contrib.auth import get_user_model
+
 from rest_framework import serializers
 
+
 from reviews.models import Category, Genre, Title
+
+
+User = get_user_model()
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -56,3 +63,31 @@ class TitleListSerializer(serializers.ModelSerializer):
     class Meta:
         fields = "__all__"
         model = Title
+
+
+class SignUpSerializer(serializers.ModelSerializer):
+    """Регистрация пользователя."""
+    
+    class Meta:
+        model = User
+        fields = ('email', 'username')
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """Сериализатор для пользователя общего назначения."""
+
+    class Meta:
+        model = User
+        fields = ('username', 'email',
+                  'first_name', 'last_name', 'bio', 'role')
+
+
+class SafeUserSerializer(serializers.ModelSerializer):
+    """Серилазиатор для пользователя с безопасными полями."""
+  
+    role = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = ('username', 'email',
+                  'first_name', 'last_name', 'bio', 'role')
