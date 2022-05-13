@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.filters import SearchFilter
+from rest_framework.pagination import PageNumberPagination
 from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -70,6 +71,8 @@ class AdminUserViewSet(ModelViewSet):
     search_fields = ('username', )
     permission_classes = (UserPermissions, )
     lookup_field = 'username'
+    PageNumberPagination.page_size = 10
+    pagination_class = PageNumberPagination
 
     def retrieve(self, request, *args, **kwargs):
         if kwargs['username'] != 'me':
@@ -100,4 +103,9 @@ class AdminUserViewSet(ModelViewSet):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors)
+
+    def destroy(self, request, *args, **kwargs):
+        if kwargs['username'] != 'me':
+            return super().destroy(request, *args, **kwargs)
+        return Response('Method not allowed', status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
