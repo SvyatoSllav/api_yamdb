@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db.models import UniqueConstraint
 
 User = get_user_model()
 
@@ -63,8 +64,11 @@ class Review(models.Model):
     )
     pub_date = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        UniqueConstraint(fields=['title', 'author'], name='unique_review')
+
     def __str__(self):
-        return self.author
+        return self.text[:20]
 
 
 class Comment(models.Model):
@@ -82,4 +86,4 @@ class Comment(models.Model):
     pub_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.author
+        return self.text[:20]

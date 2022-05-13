@@ -14,9 +14,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """Обзоры тайтла."""
     serializer_class = ReviewSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = [
-        AuthorModerAdmin,
-    ]
+    permission_classes = [AuthorModerAdmin, ]
 
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
@@ -34,9 +32,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     """Комментарии для обзора."""
     serializer_class = CommentSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = [
-        AuthorModerAdmin,
-    ]
+    permission_classes = [AuthorModerAdmin, ]
 
     def get_queryset(self):
         review_id = self.kwargs.get('review_id')
