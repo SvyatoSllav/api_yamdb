@@ -11,7 +11,10 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework import viewsets, filters
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import (
+    IsAuthenticatedOrReadOnly,
+    IsAuthenticated
+)
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
 from rest_framework.response import Response
@@ -101,7 +104,7 @@ class SignUp(APIView):
                 [email]
             )
             return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ObtainToken(APIView):
@@ -116,10 +119,21 @@ class ObtainToken(APIView):
                 confirmation_code=confirmation_code
             )
             refresh = RefreshToken.for_user(user)
-            return Response({'access_token': str(refresh.access_token)})
+            return Response(
+                {'access_token': str(refresh.access_token)},
+                status=status.HTTP_200_OK
+            )
 
         except ObjectDoesNotExist:
-            return Response('User does not exists')
+            return Response(
+                'User does not exists',
+                status=status.HTTP_404_BAD_REQUEST
+            )
+        except Exception:
+            return Response(
+                'Something went wrong',
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class AdminUserViewSet(viewsets.ModelViewSet):
@@ -127,7 +141,7 @@ class AdminUserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     filter_backends = (filters.SearchFilter, )
     search_fields = ('username', )
-    permission_classes = (UserPermissions, )
+    permission_classes = (UserPermissions, IsAuthenticated,)
     lookup_field = 'username'
     PageNumberPagination.page_size = 10
     pagination_class = PageNumberPagination
@@ -165,4 +179,7 @@ class AdminUserViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         if kwargs['username'] != 'me':
             return super().destroy(request, *args, **kwargs)
-        return Response('Method not allowed', status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return Response(
+            'Method not allowed',
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )

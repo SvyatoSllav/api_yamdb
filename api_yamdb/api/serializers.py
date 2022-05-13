@@ -67,7 +67,7 @@ class TitleListSerializer(serializers.ModelSerializer):
 
 class SignUpSerializer(serializers.ModelSerializer):
     """Регистрация пользователя."""
-    
+
     class Meta:
         model = User
         fields = ('email', 'username')
@@ -84,7 +84,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class SafeUserSerializer(serializers.ModelSerializer):
     """Серилазиатор для пользователя с безопасными полями."""
-  
+
     role = serializers.CharField(read_only=True)
 
     class Meta:
