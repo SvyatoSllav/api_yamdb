@@ -28,8 +28,8 @@ class Title(models.Model):
     description = models.TextField(blank=True)
     genre = models.ManyToManyField(Genre)
     category = models.ForeignKey(
-        Category, 
-        on_delete=models.SET_NULL, 
+        Category,
+        on_delete=models.SET_NULL,
         null=True,
         related_name='titles',
     )
@@ -48,13 +48,13 @@ class Review(models.Model):
         Title,
         on_delete=models.CASCADE,
         related_name='reviews',
-        )
+    )
     text = models.TextField()
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='reviews',
-        )
+    )
     score = models.IntegerField(
         default=0,
         validators=[
@@ -65,7 +65,8 @@ class Review(models.Model):
     pub_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        UniqueConstraint(fields=['title', 'author'], name='unique_review')
+        constraints = [models.UniqueConstraint(fields=['title', 'author'],
+                                               name='unique_rev')]
 
     def __str__(self):
         return self.text[:20]
