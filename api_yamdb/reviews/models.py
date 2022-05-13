@@ -2,6 +2,10 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import UniqueConstraint
+from django.core.exceptions import ValidationError
+from django.http import HttpResponseBadRequest
+from rest_framework import status
+from rest_framework.response import Response
 
 User = get_user_model()
 
@@ -65,6 +69,7 @@ class Review(models.Model):
     pub_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        unique_together = ('title', 'author',)
         constraints = [models.UniqueConstraint(fields=['title', 'author'],
                                                name='unique_rev')]
 
