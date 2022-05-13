@@ -11,14 +11,18 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework import viewsets, filters
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import (
+    IsAuthenticatedOrReadOnly,
+    IsAuthenticated
+)
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from reviews.models import Category, Genre, Title
+from reviews.models import Category, Genre, Title, Review
 from .serializers import (
     CategorySerializer,
     GenreSerializer,
@@ -26,10 +30,12 @@ from .serializers import (
     TitleListSerializer,
     SignUpSerializer,
     UserSerializer,
-    SafeUserSerializer
+    SafeUserSerializer,
+    ReviewSerializer,
+    CommentSerializer
 )
 from .mixins import CreateListDestroyModelViewSet
-from .permissions import IsAdminOrReadOnly
+from .permissions import IsAdminOrReadOnly, AuthorModerAdmin
 from .filters import TitleFilter
 
 from users.permissions import UserPermissions
@@ -79,6 +85,42 @@ class TitleViewSet(viewsets.ModelViewSet):
         return TitleCreateSerializer
 
 
+class ReviewViewSet(viewsets.ModelViewSet):
+    """Обзоры тайтла."""
+    serializer_class = ReviewSerializer
+    pagination_class = LimitOffsetPagination
+    permission_classes = [AuthorModerAdmin, ]
+
+    def get_queryset(self):
+        title_id = self.kwargs.get('title_id')
+        title = get_object_or_404(Title, pk=title_id)
+        return title.reviews.all()
+
+    def perform_create(self, serializer):
+        title_id = self.kwargs.get('title_id')
+        title = get_object_or_404(Title, pk=title_id)
+        serializer.save(author=self.request.user,
+                        title=title)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    """Комментарии для обзора."""
+    serializer_class = CommentSerializer
+    pagination_class = LimitOffsetPagination
+    permission_classes = [AuthorModerAdmin, ]
+
+    def get_queryset(self):
+        review_id = self.kwargs.get('review_id')
+        review = get_object_or_404(Review, pk=review_id)
+        return review.comments.all()
+
+    def perform_create(self, serializer):
+        review_id = self.kwargs.get('review_id')
+        review = get_object_or_404(Review, pk=review_id)
+        serializer.save(author=self.request.user,
+                        review=review)
+
+
 class SignUp(APIView):
 
     def post(self, request):
@@ -101,7 +143,7 @@ class SignUp(APIView):
                 [email]
             )
             return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ObtainToken(APIView):
@@ -116,10 +158,21 @@ class ObtainToken(APIView):
                 confirmation_code=confirmation_code
             )
             refresh = RefreshToken.for_user(user)
-            return Response({'access_token': str(refresh.access_token)})
+            return Response(
+                {'access_token': str(refresh.access_token)},
+                status=status.HTTP_200_OK
+            )
 
         except ObjectDoesNotExist:
-            return Response('User does not exists')
+            return Response(
+                'User does not exists',
+                status=status.HTTP_404_BAD_REQUEST
+            )
+        except Exception:
+            return Response(
+                'Something went wrong',
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class AdminUserViewSet(viewsets.ModelViewSet):
@@ -127,7 +180,7 @@ class AdminUserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     filter_backends = (filters.SearchFilter, )
     search_fields = ('username', )
-    permission_classes = (UserPermissions, )
+    permission_classes = (UserPermissions, IsAuthenticated,)
     lookup_field = 'username'
     PageNumberPagination.page_size = 10
     pagination_class = PageNumberPagination
@@ -165,4 +218,7 @@ class AdminUserViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         if kwargs['username'] != 'me':
             return super().destroy(request, *args, **kwargs)
-        return Response('Method not allowed', status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return Response(
+            'Method not allowed',
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )

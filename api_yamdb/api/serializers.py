@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 
-from reviews.models import Category, Genre, Title
+from reviews.models import Category, Genre, Title, Review, Comment
 
 
 User = get_user_model()
@@ -67,7 +67,7 @@ class TitleListSerializer(serializers.ModelSerializer):
 
 class SignUpSerializer(serializers.ModelSerializer):
     """Регистрация пользователя."""
-    
+
     class Meta:
         model = User
         fields = ('email', 'username')
@@ -84,10 +84,43 @@ class UserSerializer(serializers.ModelSerializer):
 
 class SafeUserSerializer(serializers.ModelSerializer):
     """Серилазиатор для пользователя с безопасными полями."""
-  
+
     role = serializers.CharField(read_only=True)
 
     class Meta:
         model = User
         fields = ('username', 'email',
                   'first_name', 'last_name', 'bio', 'role')
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор обзоров."""
+
+    author = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username',
+        default=serializers.CurrentUserDefault())
+
+    class Meta:
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
+        model = Review
+
+    def validate_score(self, value):
+        if value > 10 or value < 1:
+            raise serializers.ValidationError(
+                'Оценка должна быть от 1 до 10'
+            )
+        return value
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    """Сериализатор комментариев."""
+
+    author = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username',
+        default=serializers.CurrentUserDefault())
+
+    class Meta:
+        fields = ('id', 'text', 'author', 'pub_date')
+        model = Comment

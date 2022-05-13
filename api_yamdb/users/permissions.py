@@ -38,6 +38,8 @@ class UserPermissions(permissions.BasePermission):
     def has_permission(self, request, view):
         if view.action in ('retrieve', 'partial_update'):
             return True
+        if view.action == 'destroy':
+            return True
         return (
             request.user.role == 'admin'
             or request.user.is_superuser
@@ -46,8 +48,7 @@ class UserPermissions(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if view.action in ('retrieve', 'partial_update', ):
             return (
-                request.user == obj
-                or request.user.role == 'admin'
+                request.user.role == 'admin'
                 or request.user.is_superuser
             )
         return (
