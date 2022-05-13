@@ -1,6 +1,11 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db.models import UniqueConstraint
+from django.core.exceptions import ValidationError
+from django.http import HttpResponseBadRequest
+from rest_framework import status
+from rest_framework.response import Response
 
 User = get_user_model()
 
@@ -27,8 +32,8 @@ class Title(models.Model):
     description = models.TextField(blank=True)
     genre = models.ManyToManyField(Genre)
     category = models.ForeignKey(
-        Category, 
-        on_delete=models.SET_NULL, 
+        Category,
+        on_delete=models.SET_NULL,
         null=True,
         related_name='titles',
     )
@@ -47,13 +52,13 @@ class Review(models.Model):
         Title,
         on_delete=models.CASCADE,
         related_name='reviews',
-        )
+    )
     text = models.TextField()
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='reviews',
-        )
+    )
     score = models.IntegerField(
         default=0,
         validators=[
@@ -63,8 +68,13 @@ class Review(models.Model):
     )
     pub_date = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        unique_together = ('title', 'author',)
+        constraints = [models.UniqueConstraint(fields=['title', 'author'],
+                                               name='unique_rev')]
+
     def __str__(self):
-        return self.author
+        return self.text[:20]
 
 
 class Comment(models.Model):
@@ -82,4 +92,4 @@ class Comment(models.Model):
     pub_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.author
+        return self.text[:20]

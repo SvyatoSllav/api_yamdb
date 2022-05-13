@@ -1,10 +1,12 @@
 import datetime as dt
 
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
-from reviews.models import Category, Genre, Title
+from reviews.models import Category, Genre, Title, Review, Comment
 
 
 User = get_user_model()
@@ -113,3 +115,48 @@ class ObtainTokenSerializer(serializers.ModelSerializer):
                 "username can't be blank"
             )
         return value
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор обзоров."""
+
+    author = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username',
+        default=serializers.CurrentUserDefault())
+
+    class Meta:
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
+        model = Review
+
+    def validate_score(self, value):
+        if value > 10 or value < 1:
+            raise serializers.ValidationError(
+                'Оценка должна быть от 1 до 10'
+            )
+        return value
+
+    def validate(self, attrs):
+        meth = self.context['request'].method
+        if meth == 'POST':
+            user = self.context['request'].user
+            my_view = self.context['view']
+            title_id = my_view.kwargs.get('title_id')
+            title = get_object_or_404(Title, pk=title_id)
+            if Review.objects.filter(author=user, title=title).first():
+                raise serializers.ValidationError(
+                    'Вы уже опубликовали обзор')
+        return attrs
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    """Сериализатор комментариев."""
+
+    author = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username',
+        default=serializers.CurrentUserDefault())
+
+    class Meta:
+        fields = ('id', 'text', 'author', 'pub_date')
+        model = Comment
