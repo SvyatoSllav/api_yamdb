@@ -40,10 +40,9 @@ class UserPermissions(permissions.BasePermission):
             return True
         if view.action == 'destroy':
             return True
-        return (
+        return request.user.is_authenticated and (
             request.user.role == 'admin'
-            or request.user.is_superuser
-        )
+            or request.user.is_superuser)
 
     def has_object_permission(self, request, view, obj):
         if view.action in ('retrieve', 'partial_update', ):

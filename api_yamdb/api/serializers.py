@@ -1,9 +1,10 @@
 import datetime as dt
 
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 
 from rest_framework import serializers
-
+from rest_framework.validators import UniqueTogetherValidator
 
 from reviews.models import Category, Genre, Title, Review, Comment
 
@@ -111,6 +112,18 @@ class ReviewSerializer(serializers.ModelSerializer):
                 'Оценка должна быть от 1 до 10'
             )
         return value
+
+    def validate(self, attrs):
+        meth = self.context['request'].method
+        if meth == 'POST':
+            user = self.context['request'].user
+            my_view = self.context['view']
+            title_id = my_view.kwargs.get('title_id')
+            title = get_object_or_404(Title, pk=title_id)
+            if Review.objects.filter(author=user, title=title).first():
+                raise serializers.ValidationError(
+                    'Вы уже опубликовали обзор')
+        return attrs
 
 
 class CommentSerializer(serializers.ModelSerializer):
