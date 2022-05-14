@@ -89,8 +89,7 @@ class SafeUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'email',
-                  'first_name', 'last_name', 'bio', 'role')
+        exclude = ('id', 'confirmation_code')
 
 
 class ObtainTokenSerializer(serializers.ModelSerializer):
