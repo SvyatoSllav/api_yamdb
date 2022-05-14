@@ -1,11 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db.models import UniqueConstraint
-from django.core.exceptions import ValidationError
-from django.http import HttpResponseBadRequest
-from rest_framework import status
-from rest_framework.response import Response
+
 
 User = get_user_model()
 
