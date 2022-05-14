@@ -155,27 +155,25 @@ class ObtainToken(APIView):
     def post(self, request):
         username = request.data.get('username')
         confirmation_code = request.data.get('confirmation_code')
-        print(request.data)
         serializer = ObtainTokenSerializer(
             data=request.data,
             context={'request': request}
         )
-        if serializer.is_valid(raise_exception=True):
-            user = get_object_or_404(
-                User,
-                username=username,
-                confirmation_code=confirmation_code
-            )
-            if not default_token_generator.check_token(
-                user, confirmation_code
-            ):
-                return Response(status=400)
-            refresh = RefreshToken.for_user(user)
-            return Response(
-                {'access_token': str(refresh.access_token)},
-                status=status.HTTP_200_OK
-            )
-        return Response(status=400)
+        serializer.is_valid(raise_exception=True):
+        user = get_object_or_404(
+            User,
+            username=username,
+            confirmation_code=confirmation_code
+        )
+        if not default_token_generator.check_token(
+            user, confirmation_code
+        ):
+            return Response(status=400)
+        refresh = RefreshToken.for_user(user)
+        return Response(
+            {'access_token': str(refresh.access_token)},
+            status=status.HTTP_200_OK
+        )
 
 
 class AdminUserViewSet(viewsets.ModelViewSet):
