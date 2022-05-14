@@ -159,7 +159,7 @@ class ObtainToken(APIView):
             data=request.data,
             context={'request': request}
         )
-        serializer.is_valid(raise_exception=True):
+        serializer.is_valid(raise_exception=True)
         user = get_object_or_404(
             User,
             username=username,
