@@ -94,6 +94,7 @@ class SafeUserSerializer(serializers.ModelSerializer):
 
 
 class ObtainTokenSerializer(serializers.ModelSerializer):
+    username = serializers.CharField()
 
     class Meta:
         model = User
