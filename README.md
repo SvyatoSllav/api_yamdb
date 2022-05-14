@@ -68,8 +68,8 @@ POST /api/v1/titles/
     "year": 1990,
     "description": "Описание произведения",
     "genre": [
-    "films"
+    "fantasy"
     ],
-    "category": "fantasy"
+    "category": "films"
 }
 ```
