@@ -2,13 +2,13 @@ from django.db.models import Avg
 from django.conf import settings
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
 
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 
 from django_filters.rest_framework import DjangoFilterBackend
-from django.contrib.auth.tokens import default_token_generator
-from django.core.exceptions import ObjectDoesNotExist
+
 
 from rest_framework import viewsets, filters
 from rest_framework.permissions import (
@@ -29,7 +29,8 @@ from .serializers import (
     TitleListSerializer,
     SignUpSerializer,
     UserSerializer,
-    SafeUserSerializer
+    SafeUserSerializer,
+    ObtainTokenSerializer
 )
 from .mixins import CreateListDestroyModelViewSet
 from .permissions import IsAdminOrReadOnly
@@ -112,28 +113,27 @@ class ObtainToken(APIView):
     def post(self, request):
         username = request.data.get('username')
         confirmation_code = request.data.get('confirmation_code')
-
-        try:
-            user = User.objects.get(
+        print(request.data)
+        serializer = ObtainTokenSerializer(
+            data=request.data,
+            context={'request': request}
+        )
+        if serializer.is_valid(raise_exception=True):
+            user = get_object_or_404(
+                User,
                 username=username,
                 confirmation_code=confirmation_code
             )
+            if not default_token_generator.check_token(
+                user, confirmation_code
+            ):
+                return Response(status=400)
             refresh = RefreshToken.for_user(user)
             return Response(
                 {'access_token': str(refresh.access_token)},
                 status=status.HTTP_200_OK
             )
-
-        except ObjectDoesNotExist:
-            return Response(
-                'User does not exists',
-                status=status.HTTP_404_BAD_REQUEST
-            )
-        except Exception:
-            return Response(
-                'Something went wrong',
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        return Response(status=400)
 
 
 class AdminUserViewSet(viewsets.ModelViewSet):
@@ -141,7 +141,7 @@ class AdminUserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     filter_backends = (filters.SearchFilter, )
     search_fields = ('username', )
-    permission_classes = (UserPermissions, IsAuthenticated,)
+    permission_classes = (IsAuthenticated, UserPermissions)
     lookup_field = 'username'
     PageNumberPagination.page_size = 10
     pagination_class = PageNumberPagination
