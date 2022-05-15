@@ -9,7 +9,6 @@ from django.shortcuts import get_object_or_404
 
 from django_filters.rest_framework import DjangoFilterBackend
 
-
 from rest_framework import viewsets, filters
 from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly,
@@ -43,7 +42,6 @@ from .permissions import IsAdminOrReadOnly, AuthorModerAdmin
 from .filters import TitleFilter
 
 from users.permissions import UserPermissions
-
 
 User = get_user_model()
 
@@ -129,9 +127,8 @@ class CommentViewSet(viewsets.ModelViewSet):
         review_id = self.kwargs.get('review_id')
         review = get_object_or_404(title.reviews.all(), pk=review_id)
         serializer.save(
-          author=self.request.user,
-          review=review)
-
+            author=self.request.user,
+            review=review)
 
 
 class SignUp(APIView):
@@ -192,8 +189,8 @@ class ObtainToken(APIView):
 class AdminUserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    filter_backends = (filters.SearchFilter, )
-    search_fields = ('username', )
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
     permission_classes = (IsAuthenticated, UserPermissions)
     lookup_field = 'username'
     PageNumberPagination.page_size = 10
