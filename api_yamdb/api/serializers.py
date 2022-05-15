@@ -136,8 +136,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, attrs):
-        meth = self.context['request'].method
-        if meth == 'POST':
+        if self.context['request'].method == 'POST':
             user = self.context['request'].user
             my_view = self.context['view']
             title_id = my_view.kwargs.get('title_id')
