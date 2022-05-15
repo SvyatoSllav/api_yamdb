@@ -213,6 +213,6 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         if kwargs['username'] != 'me':
             return super().destroy(request, *args, **kwargs)
         return Response(
-            'Method not allowed',
-            status=status.HTTP_405_METHOD_NOT_ALLOWED
+            "You are not allowed to delete other's accounts",
+            status=status.HTTP_403_FORBIDDEN
         )
