@@ -16,7 +16,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        exclude = ('id', )
+        fields = ('name', 'slug')
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -24,7 +24,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        exclude = ('id',)
+        fields = ('name', 'slug')
 
 
 class TitleCreateSerializer(serializers.ModelSerializer):
@@ -42,8 +42,8 @@ class TitleCreateSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = '__all__'
         model = Title
+        fields = '__all__'
 
     def validate_year(self, value):
         current_year = dt.date.today().year
@@ -62,7 +62,10 @@ class TitleListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        exclude = ('id', )
+        fields = ('id', 'name', 'year', 'rating', 'description',
+                  'genre', 'category')
+        read_only_fields = ('id', 'name', 'year', 'rating', 'description',
+                            'genre', 'category')
 
 
 class SignUpSerializer(serializers.ModelSerializer):
