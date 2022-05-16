@@ -54,8 +54,8 @@ class CategoryViewSet(CreateListDestroyModelViewSet):
         IsAuthenticatedOrReadOnly,
         IsAdminOrReadOnly,
     ]
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('=name',)
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['=name']
     lookup_field = 'slug'
 
 
@@ -67,8 +67,8 @@ class GenreViewSet(CreateListDestroyModelViewSet):
         IsAuthenticatedOrReadOnly,
         IsAdminOrReadOnly
     ]
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('=name',)
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['=name']
     lookup_field = 'slug'
 
 
@@ -79,10 +79,10 @@ class TitleViewSet(viewsets.ModelViewSet):
     ).all().order_by('name')
     serializer_class = TitleCreateSerializer
     permission_classes = [IsAdminOrReadOnly]
-    filter_backends = (DjangoFilterBackend,)
+    filter_backends = [DjangoFilterBackend]
     filterset_class = TitleFilter
     pagination_class = PageNumberPagination
-    filterset_fields = ('name',)
+    filterset_fields = ['name']
 
     def get_serializer_class(self):
         if self.action in ['list', 'retrieve']:

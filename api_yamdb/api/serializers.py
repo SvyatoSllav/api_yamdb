@@ -16,7 +16,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ('name', 'slug')
+        exclude = ('id', )
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -24,7 +24,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        fields = ('name', 'slug')
+        exclude = ('id',)
 
 
 class TitleCreateSerializer(serializers.ModelSerializer):
@@ -61,8 +61,8 @@ class TitleListSerializer(serializers.ModelSerializer):
     rating = serializers.IntegerField(read_only=True)
 
     class Meta:
-        fields = "__all__"
         model = Title
+        exclude = ('id', )
 
 
 class SignUpSerializer(serializers.ModelSerializer):
