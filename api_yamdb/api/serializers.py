@@ -62,10 +62,7 @@ class TitleListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year', 'rating', 'description',
-                  'genre', 'category')
-        read_only_fields = ('id', 'name', 'year', 'rating', 'description',
-                            'genre', 'category')
+        fields = '__all__'
 
 
 class SignUpSerializer(serializers.ModelSerializer):
